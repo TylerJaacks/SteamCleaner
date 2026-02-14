@@ -16,13 +16,45 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
+    
     - name: Restore dependencies
       run: dotnet restore
+    
     - name: Build
       run: dotnet build --no-restore
+    
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    
+    - name: Publish Windows x64
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/win-x64
+    
+    - name: Zip Windows artifacts
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        cd ./publish/win-x64
+        zip -r ../../SteamCleaner-win-x64.zip .
+    
+    - name: Get current date
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      id: date
+      run: echo "date=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: SteamCleaner-win-x64.zip
+        tag_name: release-${{ steps.date.outputs.date }}
+        name: Release ${{ steps.date.outputs.date }}
+        body: Automated release from commit ${{ github.sha }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
