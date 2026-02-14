@@ -200,7 +200,7 @@ class Program
             Console.WriteLine();
 
             // Backup the registry key
-            BackupRegistryKey(item.KeyPath, $"Registry_{item.DisplayName}");
+            //BackupRegistryKey(item.KeyPath, $"Registry_{item.DisplayName}");
             // Remove the registry key
             RemoveRegistryKey(item.KeyPath);
         }
